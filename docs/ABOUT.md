@@ -1,13 +1,17 @@
-# David's Journey: The Epic Board Game
+## 🌟 Strategy-Based RPG Board
 
-_We have successfully built "David's Journey: The Epic Board Game" as a web-based React application!_
+The game has evolved from a linear board to a **Strategy-Based RPG Board**. Each character now brings unique **Passive Abilities** and **Starting Stats**, making the gameplay distinct for every hero.
 
-## 🌟 Web Application Features
+### The Character-Based Architecture
 
-### The Game Engine & State
+- **David (The Warrior):** Giant Slayer passive allows for second chances on Wisdom questions.
+- **Esther (The Advocate):** Royal Favor allows skipping penalties using the "Golden Scepter."
+- **Daniel (The Visionary):** Interpreter of Dreams allows seeing future cards to plan moves.
+- **Joseph (The Administrator):** Provisioner earns double moves from Providence cards.
 
-- Built a state-driven game loop that tracks the player's current square, the active epoch, and their character stats (Faith, Mercy, Courage).
-- The board is generated dynamically from a JSON-like structure (`gameData.ts`), making it easy to add more squares or modify existing ones.
+### Multi-Story Engine
+
+Our "Story-Provider Pattern" injects unique content into the shared engine, supporting journeys like David's "Shepherd to King" and Esther's "Orphan to Queen."
 
 ### The "World Map" Board
 
