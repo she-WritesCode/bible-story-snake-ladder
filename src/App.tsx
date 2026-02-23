@@ -24,12 +24,19 @@ export default function App() {
   const [message, setMessage] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
 
+  // Epoch State
+  const epochsList: EpochType[] = Object.keys(EPOCHS) as EpochType[];
   const currentEpoch = getEpochForSquare(currentSquare);
-  const epochInfo = EPOCHS[currentEpoch];
+  const [focusedEpochIndex, setFocusedEpochIndex] = useState(epochsList.indexOf(currentEpoch));
+
+  // Auto-focus when David moves
+  useEffect(() => {
+    setFocusedEpochIndex(epochsList.indexOf(currentEpoch));
+  }, [currentSquare]);
 
   const showMessage = (msg: string) => {
     setMessage(msg);
-    setTimeout(() => setMessage(null), 3000);
+    setTimeout(() => setMessage(null), 4000);
   };
 
   const handleRoll = (value: number) => {
@@ -41,7 +48,7 @@ export default function App() {
       setCurrentSquare(nextSquare);
       setIsRolling(false);
       checkSquare(nextSquare);
-    }, 1000); // Wait for dice animation
+    }, 1000);
   };
 
   const checkSquare = (squareId: number) => {
@@ -54,95 +61,68 @@ export default function App() {
     }
 
     if (square.type === "GATE") {
-      // Draw a Wisdom card
       const wisdomCards = CARDS.filter((c) => c.type === "WISDOM");
-      const randomCard =
-        wisdomCards[Math.floor(Math.random() * wisdomCards.length)];
+      const randomCard = wisdomCards[Math.floor(Math.random() * wisdomCards.length)];
       setActiveCard(randomCard);
       setIsModalOpen(true);
     } else if (square.type === "SNAKE") {
-      // Draw a Temptation card or apply penalty
       const temptationCards = CARDS.filter((c) => c.type === "TEMPTATION");
-      const randomCard =
-        temptationCards[Math.floor(Math.random() * temptationCards.length)];
+      const randomCard = temptationCards[Math.floor(Math.random() * temptationCards.length)];
       setActiveCard(randomCard);
       setIsModalOpen(true);
     } else if (square.type === "LADDER") {
-      // Draw a Providence card or apply bonus
       const providenceCards = CARDS.filter((c) => c.type === "PROVIDENCE");
-      const randomCard =
-        providenceCards[Math.floor(Math.random() * providenceCards.length)];
+      const randomCard = providenceCards[Math.floor(Math.random() * providenceCards.length)];
       setActiveCard(randomCard);
       setIsModalOpen(true);
 
       if (square.target) {
         setTimeout(() => {
           setCurrentSquare(square.target!);
-          showMessage(square.actionDescription || "You found a ladder!");
+          showMessage(square.actionDescription || "A divine path opens before thee!");
         }, 3000);
       }
     }
   };
 
   const handleCardAnswer = (correct: boolean) => {
-    if (activeCard?.type === "WISDOM") {
-      if (correct) {
-        showMessage("Correct! You may proceed.");
+    if (!activeCard) return;
+
+    if (correct) {
+      if (activeCard.type === "WISDOM") {
+        showMessage("Thy wisdom shines! Advance with faith.");
         setStats((prev) => ({ ...prev, faith: prev.faith + 5 }));
-      } else {
-        showMessage("Incorrect. Stay here and try again next turn.");
-        setStats((prev) => ({ ...prev, faith: Math.max(0, prev.faith - 2) }));
-        // If at a gate, maybe move back 1 space?
-        const square = GAME_BOARD.find((s) => s.id === currentSquare);
-        if (square?.type === "GATE") {
-          setTimeout(
-            () => setCurrentSquare(Math.max(1, currentSquare - 1)),
-            2000,
-          );
-        }
-      }
-    } else if (activeCard?.type === "TEMPTATION") {
-      if (correct) {
-        showMessage("You overcame the temptation!");
+      } else if (activeCard.type === "TEMPTATION") {
+        showMessage("Temptation overcome! Thy spirit grows strong.");
         setStats((prev) => ({ ...prev, courage: prev.courage + 5 }));
         if (activeCard.successEffect?.move) {
-          setTimeout(
-            () =>
-              setCurrentSquare(
-                Math.min(100, currentSquare + activeCard.successEffect!.move!),
-              ),
-            2000,
-          );
-        }
-      } else {
-        showMessage("You fell to the temptation.");
-        setStats((prev) => ({
-          ...prev,
-          courage: Math.max(0, prev.courage - 5),
-        }));
-        if (activeCard.failureEffect?.move) {
-          setTimeout(
-            () =>
-              setCurrentSquare(
-                Math.max(1, currentSquare + activeCard.failureEffect!.move!),
-              ),
-            2000,
-          );
+          setTimeout(() => setCurrentSquare(Math.min(100, currentSquare + activeCard.successEffect!.move!)), 2000);
         }
       }
-    } else if (activeCard?.type === "PROVIDENCE") {
-      showMessage("A blessing from the Lord!");
-      setStats((prev) => ({ ...prev, mercy: prev.mercy + 5 }));
-      if (activeCard.effect?.move) {
-        setTimeout(
-          () =>
-            setCurrentSquare(
-              Math.min(100, currentSquare + activeCard.effect!.move!),
-            ),
-          2000,
-        );
+    } else {
+      if (activeCard.type === "WISDOM") {
+        showMessage("The scroll remains sealed. Reflect on thy path.");
+        setStats((prev) => ({ ...prev, faith: Math.max(0, prev.faith - 2) }));
+        if (currentSquare % 10 === 0) { // If at a gate
+          setTimeout(() => setCurrentSquare(Math.max(1, currentSquare - 1)), 2000);
+        }
+      } else if (activeCard.type === "TEMPTATION") {
+        showMessage("The trap has sprung! Thy courage falters.");
+        setStats((prev) => ({ ...prev, courage: Math.max(0, prev.courage - 5) }));
+        if (activeCard.failureEffect?.move) {
+          setTimeout(() => setCurrentSquare(Math.max(1, currentSquare + activeCard.failureEffect!.move!)), 2000);
+        }
       }
     }
+
+    if (activeCard.type === "PROVIDENCE") {
+      showMessage("Divine favor is upon thee!");
+      setStats((prev) => ({ ...prev, mercy: prev.mercy + 5 }));
+      if (activeCard.effect?.move) {
+        setTimeout(() => setCurrentSquare(Math.min(100, currentSquare + activeCard.effect!.move!)), 2000);
+      }
+    }
+
     setIsModalOpen(false);
     setActiveCard(null);
   };
@@ -152,116 +132,91 @@ export default function App() {
     setStats({ faith: 10, mercy: 10, courage: 10 });
     setGameOver(false);
     setMessage(null);
+    setFocusedEpochIndex(0);
   };
 
-  return (
-    <div
-      className="min-h-screen bg-[#2c241b] font-sans text-gray-100 flex flex-col items-center py-8 px-4 select-none relative"
-      style={{
-        backgroundImage:
-          'url("https://www.transparenttextures.com/patterns/dark-leather.png")',
-      }}
-      onCopy={(e) => e.preventDefault()}
-      onPaste={(e) => e.preventDefault()}
-    >
-      {/* Header */}
-      <header className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-[#1a1410] p-4 rounded-2xl border-2 border-[#5c4033] shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-[#8b0000] rounded-xl flex items-center justify-center shadow-lg border-2 border-[#d4af37]">
-            <Crown className="w-8 h-8 text-[#d4af37]" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-[#e8dcc7] font-serif">
-              David's Journey
-            </h1>
-            <p className="text-sm font-semibold text-[#a3b1c6] uppercase tracking-widest">
-              The Epic Board Game
-            </p>
-          </div>
-        </div>
+  const focusedEpoch = epochsList[focusedEpochIndex];
 
-        <div className="flex items-center gap-4">
-          <div
-            className={`px-4 py-2 rounded-full font-bold text-sm shadow-sm border-2 ${epochInfo.bgClass} border-[#5c4033] text-[#3e2723]`}
-          >
-            Epoch: {epochInfo.name}
+  return (
+    <div className="h-screen overflow-hidden flex flex-col relative bg-medieval-stone shadow-inner">
+      {/* Scroll Header - Fixed height */}
+      <header className="w-full flex justify-center py-4 px-4 shrink-0 z-10">
+        <div className="w-full max-w-4xl medieval-scroll p-4 text-center border-y-2 border-medieval-gold/30 shadow-xl bg-medieval-parchment/90 backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-left">
+              <h1 className="text-xl md:text-3xl font-display font-black text-medieval-blood tracking-widest uppercase">
+                David's Journey
+              </h1>
+              <p className="text-medieval-stone font-medieval text-xs italic">
+                {EPOCHS[focusedEpoch].name}
+              </p>
+            </div>
+
+            <div className="flex gap-4 items-center">
+              <div className="hidden md:flex flex-col items-center px-4 py-1 bg-medieval-stone/5 border border-medieval-stone/10 rounded-sm">
+                <span className="text-[10px] font-black text-medieval-stone uppercase tracking-tighter">David's Epoch</span>
+                <span className="font-serif text-medieval-ink font-bold">{EPOCHS[currentEpoch].name}</span>
+              </div>
+              <button
+                onClick={resetGame}
+                className="p-2 bg-medieval-stone/10 border border-medieval-stone/20 rounded-full hover:bg-medieval-blood hover:text-white transition-colors"
+                title="Restart Chronicle"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <button
-            onClick={resetGame}
-            className="p-2 bg-[#e8dcc7] rounded-full shadow-sm border-2 border-[#5c4033] hover:bg-[#d4d0a5] transition-colors"
-          >
-            <RefreshCw className="w-5 h-5 text-[#3e2723]" />
-          </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="w-full max-w-5xl flex flex-col gap-8 items-center">
-        {/* Top: Board */}
-        <div className="w-full flex flex-col gap-6">
-          <Board squares={GAME_BOARD} currentSquare={currentSquare} />
+      {/* Main Content Area - Expands */}
+      <main className="grow relative flex flex-col items-center justify-start p-4 md:p-8 overflow-hidden">
+        <div className="w-full max-w-7xl h-full flex flex-col items-center gap-4 relative">
+          <Board
+            squares={GAME_BOARD}
+            currentSquare={currentSquare}
+            focusedEpochIndex={focusedEpochIndex}
+            onPan={(direction) => setFocusedEpochIndex(prev => Math.max(0, Math.min(epochsList.length - 1, prev + direction)))}
+            maxUnlockedEpochIndex={epochsList.indexOf(currentEpoch)}
+          />
 
-          {/* Message Toast */}
           <AnimatePresence>
             {message && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl font-semibold z-50"
+                exit={{ opacity: 0 }}
+                className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-xl text-center p-4 bg-medieval-ink text-medieval-parchment border-2 border-medieval-gold font-medieval italic shadow-2xl z-40"
               >
-                {message}
+                "{message}"
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+      </main>
 
-        {/* Bottom: Controls & Stats */}
-        <div className="w-full flex flex-col md:flex-row gap-8 items-center md:items-stretch justify-center">
-          <div className="bg-[#e8dcc7] p-6 rounded-2xl shadow-xl border-4 border-[#5c4033] w-full md:w-1/3 flex flex-col items-center">
-            <h2 className="text-xl font-bold mb-6 text-[#3e2723] font-serif">
-              Your Turn
-            </h2>
-            <Dice
-              onRoll={handleRoll}
-              disabled={isRolling || isModalOpen || gameOver}
-            />
+      {/* Fixed Bottom Bar */}
+      <footer className="w-full h-24 md:h-28 bg-medieval-stone border-t-4 border-medieval-gold shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50 p-2 md:p-4 shrink-0">
+        <div className="max-w-6xl mx-auto h-full flex items-center justify-between gap-4">
+          <div className="w-1/4 hidden md:block">
+            <div className="medieval-scroll p-3 flex flex-col items-center bg-opacity-50">
+              <span className="text-[10px] font-black text-medieval-stone uppercase tracking-widest font-display">Path Taken</span>
+              <div className="text-2xl font-black font-serif text-medieval-ink">
+                {currentSquare} <span className="text-[10px] text-medieval-stone/60 font-medieval italic">/ 100</span>
+              </div>
+            </div>
           </div>
 
-          <div className="w-full md:w-1/3 flex items-center justify-center">
+          <div className="flex-1 max-w-xl">
             <StatsPanel stats={stats} />
           </div>
 
-          {/* Current Square Info */}
-          <div className="bg-[#e8dcc7] p-6 rounded-2xl shadow-xl border-4 border-[#5c4033] w-full md:w-1/3">
-            <h3 className="text-sm font-bold text-[#8b5a2b] uppercase tracking-wider mb-2 font-serif">
-              Current Location
-            </h3>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#8b0000] flex items-center justify-center text-[#d4af37] font-bold border-2 border-[#d4af37]">
-                {currentSquare}
-              </div>
-              <p className="font-semibold text-lg text-[#3e2723] font-serif">
-                {GAME_BOARD.find((s) => s.id === currentSquare)?.label ||
-                  `Square ${currentSquare}`}
-              </p>
-            </div>
-            {GAME_BOARD.find((s) => s.id === currentSquare)
-              ?.actionDescription && (
-              <p className="mt-4 text-sm text-[#5c4033] italic border-l-4 border-[#8b5a2b] pl-3 font-serif">
-                "
-                {
-                  GAME_BOARD.find((s) => s.id === currentSquare)
-                    ?.actionDescription
-                }
-                "
-              </p>
-            )}
+          <div className="w-1/4 flex justify-end">
+            <Dice onRoll={handleRoll} disabled={isRolling || isModalOpen || !!message || gameOver} />
           </div>
         </div>
-      </main>
+      </footer>
 
-      {/* Modals */}
       <CardModal
         card={activeCard}
         isOpen={isModalOpen}
@@ -269,58 +224,42 @@ export default function App() {
         onAnswer={handleCardAnswer}
       />
 
-      {/* Game Over Modal */}
+      {/* Victory Scroll Modal */}
       <AnimatePresence>
         {gameOver && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#e8dcc7] p-10 rounded-3xl shadow-2xl max-w-lg w-full text-center flex flex-col items-center border-4 border-[#5c4033]"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="max-w-3xl w-full p-12 md:p-20 medieval-scroll text-center border-medieval-gold shadow-[0_0_100px_rgba(212,175,55,0.4)]"
             >
-              <div className="w-24 h-24 bg-[#d4af37] rounded-full flex items-center justify-center mb-6 border-4 border-[#8b0000]">
-                <Trophy className="w-12 h-12 text-[#8b0000]" />
+              <div className="mb-8 flex justify-center">
+                <div className="w-32 h-32 bg-medieval-gold rounded-full flex items-center justify-center border-8 border-medieval-stone shadow-2xl">
+                  <Crown className="w-16 h-16 text-medieval-blood" />
+                </div>
               </div>
-              <h2 className="text-4xl font-black text-[#3e2723] mb-4 font-serif">
-                A Man After God's Heart
-              </h2>
-              <p className="text-lg text-[#5c4033] mb-8 font-serif">
-                You have completed David's journey! Through faith, mercy, and
-                courage, you navigated the trials and triumphs of his life.
+              <h2 className="text-5xl md:text-7xl font-display font-black text-medieval-blood mb-4 tracking-widest uppercase">Victory</h2>
+              <p className="text-xl md:text-3xl font-serif text-medieval-ink mb-12 italic">
+                "Thou hast walked with the Lord through every trial. A crown of life awaits thee!"
               </p>
 
-              <div className="flex gap-4 mb-8 w-full justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#4682b4] font-serif">
-                    {stats.faith}
-                  </div>
-                  <div className="text-xs uppercase font-bold text-[#8b5a2b] font-serif">
-                    Faith
-                  </div>
+              <div className="grid grid-cols-3 gap-4 md:gap-8 mb-12">
+                <div className="flex flex-col p-2 md:p-4 bg-medieval-ink/5 rounded-sm border border-medieval-stone/10 font-serif">
+                  <span className="text-[10px] uppercase font-display text-medieval-stone tracking-widest mb-1">Faith</span>
+                  <span className="text-2xl md:text-4xl font-black text-medieval-blood">{stats.faith}</span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#8b0000] font-serif">
-                    {stats.mercy}
-                  </div>
-                  <div className="text-xs uppercase font-bold text-[#8b5a2b] font-serif">
-                    Mercy
-                  </div>
+                <div className="flex flex-col p-2 md:p-4 bg-medieval-ink/5 rounded-sm border border-medieval-stone/10 font-serif">
+                  <span className="text-[10px] uppercase font-display text-medieval-stone tracking-widest mb-1">Mercy</span>
+                  <span className="text-2xl md:text-4xl font-black text-medieval-blood">{stats.mercy}</span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#d4af37] font-serif">
-                    {stats.courage}
-                  </div>
-                  <div className="text-xs uppercase font-bold text-[#8b5a2b] font-serif">
-                    Courage
-                  </div>
+                <div className="flex flex-col p-2 md:p-4 bg-medieval-ink/5 rounded-sm border border-medieval-stone/10 font-serif">
+                  <span className="text-[10px] uppercase font-display text-medieval-stone tracking-widest mb-1">Courage</span>
+                  <span className="text-2xl md:text-4xl font-black text-medieval-blood">{stats.courage}</span>
                 </div>
               </div>
 
-              <button
-                onClick={resetGame}
-                className="px-8 py-4 bg-[#8b0000] text-[#e8dcc7] rounded-full font-bold uppercase tracking-widest hover:bg-[#5c4033] transition-colors shadow-xl w-full border-2 border-[#d4af37] font-serif"
-              >
-                Play Again
+              <button onClick={resetGame} className="medieval-button w-full py-5 text-xl">
+                Begin Thy Reign
               </button>
             </motion.div>
           </div>
