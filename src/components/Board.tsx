@@ -1,18 +1,12 @@
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Square, EPOCHS, EpochType } from "../gameData";
 import { motion } from "motion/react";
 import {
-  Star,
-  ShieldAlert,
-  ArrowUpRight,
-  ArrowDownRight,
-  Castle,
-  Tent,
-  Mountain,
-  Anchor,
   Compass,
   ChevronLeft,
   ChevronRight,
+  Castle,
+  Tent
 } from "lucide-react";
 
 interface BoardProps {
@@ -33,23 +27,75 @@ export const Board: React.FC<BoardProps> = ({
   const epochsList: EpochType[] = Object.keys(EPOCHS) as EpochType[];
   const focusedEpoch = epochsList[focusedEpochIndex];
 
-  // Filter squares for the focused epoch (20 squares per epoch)
-  const focusedSquares = squares.filter(s => s.epoch === focusedEpoch);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Organize into rows (4 rows of 5 for better layout in focused view)
-  const row1 = focusedSquares.slice(0, 5);
-  const row2 = focusedSquares.slice(5, 10);
-  const row3 = focusedSquares.slice(10, 15);
-  const row4 = focusedSquares.slice(15, 20);
-  // Zig-zag pattern
-  row2.reverse();
-  row4.reverse();
-  const rows = [row4, row3, row2, row1]; // Show higher squares on top
+  // Constants (matching Tailwind classes)
+  const PADDING = isMobile ? 24 : 40;
+  const GAP = isMobile ? 16 : 24;
+  const SQUARE_SIZE = isMobile ? 64 : 80;
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Filter squares for the focused epoch
+  const focusedSquares = useMemo(() => squares.filter(s => s.epoch === focusedEpoch), [squares, focusedEpoch]);
+
+  // Organize into rows for the grid
+  const rows = useMemo(() => {
+    const r1 = focusedSquares.slice(0, 5);
+    const r2 = [...focusedSquares.slice(5, 10)].reverse();
+    const r3 = focusedSquares.slice(10, 15);
+    const r4 = [...focusedSquares.slice(15, 20)].reverse();
+    return [r4, r3, r2, r1];
+  }, [focusedSquares]);
+
+  // Pure mathematical coordinate calculator
+  const getSquareCoord = (id: number) => {
+    const epochStartId = focusedEpochIndex * 20;
+    const localId = id - epochStartId - 1;
+
+    // Check if square is in current epoch
+    const inCurrentEpoch = localId >= 0 && localId < 20;
+
+    if (!inCurrentEpoch) {
+      // Return boundary point
+      const isForward = id > epochStartId + 20;
+      return {
+        x: isForward ? PADDING + 5 * (SQUARE_SIZE + GAP) : -PADDING,
+        y: PADDING + 2 * (SQUARE_SIZE + GAP),
+        outOfBounds: true
+      };
+    }
+
+    const rowIdx = Math.floor(localId / 5); // 0=Bottom, 3=Top
+    let colIdx = localId % 5;
+    if (rowIdx % 2 === 1) colIdx = 4 - colIdx; // Zig-zag reverse for rows 1 and 3
+
+    return {
+      x: PADDING + colIdx * (SQUARE_SIZE + GAP) + SQUARE_SIZE / 2,
+      y: PADDING + (3 - rowIdx) * (SQUARE_SIZE + GAP) + SQUARE_SIZE / 2,
+      outOfBounds: false
+    };
+  };
+
+  const connections = useMemo(() => {
+    return focusedSquares
+      .filter(s => s.target && (s.type === "LADDER" || s.type === "SNAKE"))
+      .map(s => ({
+        id: s.id,
+        type: s.type,
+        from: getSquareCoord(s.id),
+        to: getSquareCoord(s.target!)
+      }));
+  }, [focusedSquares, focusedEpochIndex, isMobile]);
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center gap-8">
       {/* Epoch Navigation */}
-      <div className="flex items-center gap-6 z-20">
+      <div className="flex items-center gap-6 z-30">
         <button
           onClick={() => onPan(-1)}
           disabled={focusedEpochIndex === 0}
@@ -59,7 +105,7 @@ export const Board: React.FC<BoardProps> = ({
         </button>
 
         <div className="text-center min-w-[200px]">
-          <h2 className="text-2xl font-display font-black text-white tracking-widest uppercase mb-1">
+          <h2 className="text-2xl font-display font-black text-medieval-ink tracking-widest uppercase mb-1">
             {EPOCHS[focusedEpoch].name}
           </h2>
           <div className="text-[10px] font-medieval text-medieval-stone italic">
@@ -77,12 +123,111 @@ export const Board: React.FC<BoardProps> = ({
       </div>
 
       {/* The Board View */}
-      <div className="relative w-full max-w-5xl medieval-scroll p-10 border-medieval-gold/50 shadow-2xl scale-110 md:scale-125">
+      <div className="relative medieval-scroll border-medieval-gold/50 shadow-2xl scale-[0.85] md:scale-110"
+        style={{
+          width: 2 * PADDING + 5 * SQUARE_SIZE + 4 * GAP,
+          height: 2 * PADDING + 4 * SQUARE_SIZE + 3 * GAP
+        }}>
+
         <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')]"></div>
 
-        <div className="flex flex-col gap-3 relative z-10">
+        {/* Pure SVG Connection Overlay */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[15] overflow-visible">
+          <defs>
+            <linearGradient id="ladderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#5D2906" />
+              <stop offset="50%" stopColor="#8B4513" />
+              <stop offset="100%" stopColor="#5D2906" />
+            </linearGradient>
+            <linearGradient id="snakeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1a4d1a" />
+              <stop offset="50%" stopColor="#2e7d32" />
+              <stop offset="100%" stopColor="#0a2d0a" />
+            </linearGradient>
+            <filter id="shadow">
+              <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.6" />
+            </filter>
+          </defs>
+
+          {connections.map(conn => {
+            const dx = conn.to.x - conn.from.x;
+            const dy = conn.to.y - conn.from.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const isLadder = conn.type === "LADDER";
+
+            if (isLadder) {
+              const angle = Math.atan2(dy, dx);
+              const railSpacing = isMobile ? 8 : 10;
+              const rungSpacing = isMobile ? 12 : 16;
+              const numRungs = Math.floor(dist / rungSpacing);
+
+              return (
+                <g key={conn.id} filter="url(#shadow)">
+                  {/* Rails */}
+                  <line
+                    x1={conn.from.x - Math.sin(angle) * railSpacing} y1={conn.from.y + Math.cos(angle) * railSpacing}
+                    x2={conn.to.x - Math.sin(angle) * railSpacing} y2={conn.to.y + Math.cos(angle) * railSpacing}
+                    stroke="url(#ladderGrad)" strokeWidth={isMobile ? "4" : "6"} strokeLinecap="round"
+                  />
+                  <line
+                    x1={conn.from.x + Math.sin(angle) * railSpacing} y1={conn.from.y - Math.cos(angle) * railSpacing}
+                    x2={conn.to.x + Math.sin(angle) * railSpacing} y2={conn.to.y - Math.cos(angle) * railSpacing}
+                    stroke="url(#ladderGrad)" strokeWidth={isMobile ? "4" : "6"} strokeLinecap="round"
+                  />
+                  {/* Rungs */}
+                  {Array.from({ length: numRungs }).map((_, i) => {
+                    const t = (i + 1) / (numRungs + 1);
+                    const rx = conn.from.x + dx * t;
+                    const ry = conn.from.y + dy * t;
+                    return (
+                      <line
+                        key={i}
+                        x1={rx - Math.sin(angle) * (railSpacing + 2)} y1={ry + Math.cos(angle) * (railSpacing + 2)}
+                        x2={rx + Math.sin(angle) * (railSpacing + 2)} y2={ry - Math.cos(angle) * (railSpacing + 2)}
+                        stroke="#3E1D04" strokeWidth={isMobile ? "2" : "3"} strokeLinecap="round"
+                      />
+                    );
+                  })}
+                </g>
+              );
+            } else {
+              // Snake - Premium Curvy Path
+              const cp1x = conn.from.x + dx * 0.2 - dy * 0.4;
+              const cp1y = conn.from.y + dy * 0.2 + dx * 0.4;
+              const cp2x = conn.from.x + dx * 0.8 + dy * 0.4;
+              const cp2y = conn.from.y + dy * 0.8 - dx * 0.4;
+              const path = `M ${conn.from.x} ${conn.from.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${conn.to.x} ${conn.to.y}`;
+
+              return (
+                <g key={conn.id} filter="url(#shadow)">
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke="url(#snakeGrad)"
+                    strokeWidth={isMobile ? "10" : "16"}
+                    strokeLinecap="round"
+                  />
+                  {/* Scales/Glistening Highlights */}
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.2)"
+                    strokeWidth={isMobile ? "3" : "5"}
+                    strokeDasharray="1 8"
+                    strokeLinecap="round"
+                  />
+                  {/* Snake Eyes at start point */}
+                  <circle cx={conn.from.x - 2} cy={conn.from.y - 2} r="1.5" fill="#FFD700" />
+                  <circle cx={conn.from.x + 2} cy={conn.from.y + 2} r="1.5" fill="#FFD700" />
+                </g>
+              );
+            }
+          })}
+        </svg>
+
+        <div className="flex flex-col relative z-20" style={{ gap: GAP, padding: PADDING }}>
           {rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex flex-row gap-6 justify-center">
+            <div key={rowIndex} className="flex flex-row" style={{ gap: GAP }}>
               {row.map((square) => {
                 const isCurrent = currentSquare === square.id;
                 let icon = null;
@@ -97,12 +242,6 @@ export const Board: React.FC<BoardProps> = ({
                 } else if (square.type === "GATE") {
                   icon = <Castle className="w-6 h-6 text-white" />;
                   squareClass += " bg-medieval-ink";
-                } else if (square.type === "SNAKE") {
-                  icon = <img src="/realistic_snake.png" alt="Snake" className="w-12 h-12 md:w-14 md:h-14 object-contain drop-shadow-xl" />;
-                  squareClass += " bg-medieval-blood/30";
-                } else if (square.type === "LADDER") {
-                  icon = <img src="/rustic_ladder.png" alt="Ladder" className="w-12 h-12 md:w-14 md:h-14 object-contain drop-shadow-lg" />;
-                  squareClass += " bg-white/20 border-medieval-gold/20";
                 } else {
                   squareClass += " bg-white/10";
                 }
@@ -110,10 +249,14 @@ export const Board: React.FC<BoardProps> = ({
                 return (
                   <div
                     key={square.id}
-                    className={`relative w-16 h-16 md:w-20 md:h-20 flex flex-col items-center justify-center ${squareClass}`}
-                    style={{ borderRadius: '4px 12px 6px 10px' }}
+                    className={`relative flex flex-col items-center justify-center ${squareClass}`}
+                    style={{
+                      borderRadius: '4px 12px 6px 10px',
+                      width: SQUARE_SIZE,
+                      height: SQUARE_SIZE
+                    }}
                   >
-                    <span className="absolute top-1 left-1.5 text-[10px] font-black text-medieval-ink/40 font-medieval italic italic">
+                    <span className="absolute top-1 left-1.5 text-[10px] font-black text-medieval-ink/40 font-medieval italic">
                       {square.id}
                     </span>
 
@@ -122,21 +265,20 @@ export const Board: React.FC<BoardProps> = ({
                     {isCurrent && (
                       <motion.div
                         layoutId="player"
-                        className="absolute inset-0 flex items-center justify-center z-30"
+                        className="absolute inset-0 flex items-center justify-center z-40"
                         initial={{ scale: 0, y: -20 }}
                         animate={{ scale: 1, y: 0 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
                       >
-                        <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
-                          {/* Realistic David Avatar */}
-                          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full border-4 border-medieval-gold shadow-[0_0_20px_rgba(212,175,55,0.6)] overflow-hidden bg-medieval-stone z-10">
+                        <div className="relative flex items-center justify-center" style={{ width: SQUARE_SIZE, height: SQUARE_SIZE }}>
+                          <div className="rounded-full border-4 border-medieval-gold shadow-[0_0_20px_rgba(212,175,55,0.6)] overflow-hidden bg-medieval-stone z-10"
+                            style={{ width: SQUARE_SIZE * 0.8, height: SQUARE_SIZE * 0.8 }}>
                             <img
                               src="/david_avatar.png"
                               alt="David"
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          {/* Divine Glow Effect */}
                           <div className="absolute inset-0 bg-medieval-gold/20 rounded-full blur-xl animate-pulse"></div>
                         </div>
                       </motion.div>
