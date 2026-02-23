@@ -52,15 +52,15 @@ export const EPOCHS: Record<
   EpochType,
   { name: string; color: string; bgClass: string }
 > = {
-  SHEPHERD: { name: "The Shepherd", color: "#4ade80", bgClass: "bg-green-100" },
-  COURT: { name: "The Court", color: "#60a5fa", bgClass: "bg-blue-100" },
+  SHEPHERD: { name: "The Shepherd", color: "#8f9779", bgClass: "bg-[#d4d0a5]" },
+  COURT: { name: "The Court", color: "#4682b4", bgClass: "bg-[#a3b1c6]" },
   WILDERNESS: {
     name: "The Wilderness",
-    color: "#d6d3d1",
-    bgClass: "bg-stone-200",
+    color: "#8b5a2b",
+    bgClass: "bg-[#d9c5a0]",
   },
-  THRONE: { name: "The Throne", color: "#c084fc", bgClass: "bg-purple-100" },
-  LEGACY: { name: "The Legacy", color: "#fcd34d", bgClass: "bg-yellow-100" },
+  THRONE: { name: "The Throne", color: "#8b0000", bgClass: "bg-[#c29b9b]" },
+  LEGACY: { name: "The Legacy", color: "#d4af37", bgClass: "bg-[#e6d598]" },
 };
 
 export const getEpochForSquare = (id: number): EpochType => {
@@ -74,7 +74,7 @@ export const getEpochForSquare = (id: number): EpochType => {
 export const GAME_BOARD: Square[] = Array.from({ length: 100 }, (_, i) => {
   const id = i + 1;
   const epoch = getEpochForSquare(id);
-  
+
   // Default values
   let type: SquareType = "NORMAL";
   let label = `Square ${id}`;
@@ -120,7 +120,7 @@ export const GAME_BOARD: Square[] = Array.from({ length: 100 }, (_, i) => {
   } else if (id === 66) {
     type = "SNAKE";
     label = "The Rooftop Temptation";
-    target = 42; 
+    target = 42;
   } else if (id === 72) {
     type = "LADDER";
     label = "Bringing the Ark Home";
@@ -133,8 +133,8 @@ export const GAME_BOARD: Square[] = Array.from({ length: 100 }, (_, i) => {
     type = "LADDER";
     label = "Solomon is Appointed";
     target = 98;
-  } 
-  
+  }
+
   // 2. FILL THE GAPS (Density Rule: Max 3 spaces)
   // If the square is still "NORMAL" and meets the cadence, turn it into a Card Trigger.
   // We use % 4 so that if 1,2,3 are normal, 4 MUST be an interaction.
@@ -144,14 +144,14 @@ export const GAME_BOARD: Square[] = Array.from({ length: 100 }, (_, i) => {
     const isEvenFill = id % 8 === 0;
     type = isEvenFill ? "LADDER" : "SNAKE";
     label = isEvenFill ? "Divine Favor" : "Test of Wisdom";
-    
+
     // Procedural movement for fill-in squares
     if (type === "LADDER") {
-       target = Math.min(id + 3, 99); 
+      target = Math.min(id + 3, 99);
     } else {
-       target = Math.max(id - 3, 1);
+      target = Math.max(id - 3, 1);
     }
-    
+
     trigger = isEvenFill ? "PROVIDENCE" : "WISDOM";
   }
 
@@ -303,7 +303,8 @@ export const CARDS: Card[] = [
     id: "w15",
     type: "WISDOM",
     title: "The Cave of Refuge",
-    description: "What was the name of the cave where David’s family and the 400 men joined him?",
+    description:
+      "What was the name of the cave where David’s family and the 400 men joined him?",
     question: "Which cave was David's headquarters in the wilderness?",
     options: ["En Gedi", "Adullam", "Macpelah", "Horeb"],
     answer: "Adullam",
@@ -392,39 +393,45 @@ export const CARDS: Card[] = [
     description:
       "You are crowned King over all Israel at Hebron. Move forward 5 spaces.",
     effect: { move: 5 },
-  },{
+  },
+  {
     id: "p11",
     type: "PROVIDENCE",
     title: "Bread of the Presence",
-    description: "The priest gives you holy bread when you are hungry. Gain strength! Move forward 3 spaces.",
+    description:
+      "The priest gives you holy bread when you are hungry. Gain strength! Move forward 3 spaces.",
     effect: { move: 3 },
   },
   {
     id: "p12",
     type: "PROVIDENCE",
     title: "Mephibosheth’s Kindness",
-    description: "You showed kindness to Jonathan’s son. God honors your loyalty. Move forward 4 spaces.",
+    description:
+      "You showed kindness to Jonathan’s son. God honors your loyalty. Move forward 4 spaces.",
     effect: { move: 4 },
   },
   {
     id: "p13",
     type: "PROVIDENCE",
     title: "The Threshing Floor",
-    description: "You built an altar to stop the plague. God hears your prayer! Move forward 5 spaces.",
+    description:
+      "You built an altar to stop the plague. God hears your prayer! Move forward 5 spaces.",
     effect: { move: 5 },
   },
   {
     id: "p14",
     type: "PROVIDENCE",
     title: "The Brook Besor",
-    description: "You let the weary soldiers rest and shared the spoil equally. Move forward 3 spaces.",
+    description:
+      "You let the weary soldiers rest and shared the spoil equally. Move forward 3 spaces.",
     effect: { move: 3 },
   },
   {
     id: "p15",
     type: "PROVIDENCE",
     title: "Hiram's Cedar",
-    description: "King Hiram sends cedars to build your palace. Your kingdom is established! Move forward 4 spaces.",
+    description:
+      "King Hiram sends cedars to build your palace. Your kingdom is established! Move forward 4 spaces.",
     effect: { move: 4 },
   },
   {
@@ -551,7 +558,8 @@ export const CARDS: Card[] = [
     id: "t9",
     type: "TEMPTATION",
     title: "The Snake of Nabal",
-    description: "Nabal insulted you! Will you take revenge or listen to Abigail?",
+    description:
+      "Nabal insulted you! Will you take revenge or listen to Abigail?",
     question: "What does the name 'Nabal' mean?",
     options: ["Rich", "Fool", "Sheep", "Angry"],
     answer: "Fool",
@@ -573,8 +581,10 @@ export const CARDS: Card[] = [
     id: "t11",
     type: "TEMPTATION",
     title: "The Snake of Keilah",
-    description: "The people you saved are going to betray you to Saul! Can you ask God for direction?",
-    question: "What object did the priest Abiathar bring to David to help him seek God?",
+    description:
+      "The people you saved are going to betray you to Saul! Can you ask God for direction?",
+    question:
+      "What object did the priest Abiathar bring to David to help him seek God?",
     options: ["The Ark", "The Ephod", "The Menorah", "The Censer"],
     answer: "The Ephod",
     successEffect: { move: 4 },

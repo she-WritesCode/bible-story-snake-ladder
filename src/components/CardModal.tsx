@@ -51,17 +51,17 @@ export const CardModal: React.FC<CardModalProps> = ({
   let headerColor = "text-gray-900";
 
   if (card.type === "WISDOM") {
-    bgColor = "bg-[#fdfbf7]";
-    borderColor = "border-[#8c7355]";
-    headerColor = "text-[#5c4a3d]";
+    bgColor = "bg-[#e8dcc7]";
+    borderColor = "border-[#5c4033]";
+    headerColor = "text-[#3e2723]";
   } else if (card.type === "PROVIDENCE") {
-    bgColor = "bg-yellow-50";
-    borderColor = "border-yellow-400";
-    headerColor = "text-yellow-800";
+    bgColor = "bg-[#d4d0a5]";
+    borderColor = "border-[#8f9779]";
+    headerColor = "text-[#2f3325]";
   } else if (card.type === "TEMPTATION") {
-    bgColor = "bg-red-50";
-    borderColor = "border-red-800";
-    headerColor = "text-red-900";
+    bgColor = "bg-[#c29b9b]";
+    borderColor = "border-[#8b0000]";
+    headerColor = "text-[#3e2723]";
   }
 
   return (
@@ -84,15 +84,15 @@ export const CardModal: React.FC<CardModalProps> = ({
                     ? "Divine Favor"
                     : "The Tempter's Trap"}
               </h2>
-              <h3 className="text-xl font-semibold mt-2 text-gray-800">
+              <h3 className="text-xl font-semibold mt-2 text-[#3e2723] font-serif">
                 {card.title}
               </h3>
             </div>
 
-            <div className="mb-8 text-lg text-gray-700 leading-relaxed text-center font-medium">
+            <div className="mb-8 text-lg text-[#5c4033] leading-relaxed text-center font-medium font-serif">
               {card.description}
               {card.question && (
-                <div className="mt-4 font-bold text-gray-900">
+                <div className="mt-4 font-bold text-[#3e2723]">
                   {card.question}
                 </div>
               )}
@@ -103,24 +103,25 @@ export const CardModal: React.FC<CardModalProps> = ({
                 <div className="flex flex-col gap-3">
                   {card.options.map((option, idx) => {
                     let btnClass =
-                      "bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50";
+                      "bg-[#e8dcc7] border-2 border-[#5c4033] text-[#3e2723] hover:bg-[#d4d0a5]";
                     let icon = null;
 
                     if (selectedOption === option) {
                       if (isCorrect) {
                         btnClass =
-                          "bg-green-100 border-green-500 text-green-800";
-                        icon = <Check className="w-5 h-5 text-green-600" />;
+                          "bg-[#8f9779] border-[#2f3325] text-[#2f3325]";
+                        icon = <Check className="w-5 h-5 text-[#2f3325]" />;
                       } else {
-                        btnClass = "bg-red-100 border-red-500 text-red-800";
-                        icon = <X className="w-5 h-5 text-red-600" />;
+                        btnClass =
+                          "bg-[#c29b9b] border-[#8b0000] text-[#3e2723]";
+                        icon = <X className="w-5 h-5 text-[#8b0000]" />;
                       }
                     } else if (
                       selectedOption !== null &&
                       option === card.answer
                     ) {
-                      btnClass = "bg-green-50 border-green-400 text-green-700";
-                      icon = <Check className="w-5 h-5 text-green-500" />;
+                      btnClass = "bg-[#d4d0a5] border-[#8f9779] text-[#2f3325]";
+                      icon = <Check className="w-5 h-5 text-[#2f3325]" />;
                     }
 
                     return (
@@ -128,7 +129,7 @@ export const CardModal: React.FC<CardModalProps> = ({
                         key={idx}
                         onClick={() => handleOptionClick(option)}
                         disabled={selectedOption !== null}
-                        className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold ${btnClass}`}
+                        className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold font-serif ${btnClass}`}
                       >
                         <span>{option}</span>
                         {icon}
@@ -142,7 +143,7 @@ export const CardModal: React.FC<CardModalProps> = ({
               <div className="flex justify-center mt-6">
                 <button
                   onClick={handleAcknowledge}
-                  className="px-8 py-3 bg-indigo-600 text-white rounded-full font-bold uppercase tracking-wider hover:bg-indigo-700 transition-colors shadow-lg"
+                  className="px-8 py-3 bg-[#8b0000] text-[#e8dcc7] rounded-full font-bold uppercase tracking-wider hover:bg-[#5c4033] transition-colors shadow-lg border-2 border-[#d4af37] font-serif"
                 >
                   Continue
                 </button>

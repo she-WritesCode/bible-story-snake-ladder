@@ -39,20 +39,22 @@ export const Dice: React.FC<DiceProps> = ({ onRoll, disabled }) => {
         disabled={disabled || isRolling}
         className={`relative w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl border-4 transition-colors ${
           disabled
-            ? "bg-gray-300 border-gray-400 cursor-not-allowed"
-            : "bg-white border-indigo-600 cursor-pointer hover:bg-indigo-50"
+            ? "bg-[#a3b1c6] border-[#5c4033] cursor-not-allowed opacity-70"
+            : "bg-[#e8dcc7] border-[#8b0000] cursor-pointer hover:bg-[#d4d0a5]"
         }`}
       >
         {value ? (
-          <span className="text-4xl font-bold text-indigo-800">{value}</span>
+          <span className="text-4xl font-bold text-[#3e2723] font-serif">
+            {value}
+          </span>
         ) : (
           <Dices
-            className={`w-12 h-12 ${disabled ? "text-gray-500" : "text-indigo-600"}`}
+            className={`w-12 h-12 ${disabled ? "text-[#5c4033]" : "text-[#8b0000]"}`}
           />
         )}
       </motion.button>
-      <span className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
-        {disabled ? "Wait..." : "Roll Dice"}
+      <span className="text-sm font-semibold text-[#8b5a2b] uppercase tracking-wider font-serif">
+        {disabled ? "Wait..." : "Cast Lots"}
       </span>
     </div>
   );

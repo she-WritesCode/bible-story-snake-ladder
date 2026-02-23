@@ -34,10 +34,10 @@ export const Board: React.FC<BoardProps> = ({ squares, currentSquare }) => {
   rows.reverse(); // Put row 10 at the top
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 bg-[#fdfbf7] rounded-xl shadow-2xl border-4 border-[#8c7355] relative overflow-hidden">
+    <div className="w-full max-w-7xl mx-auto p-4 bg-[#e8dcc7] rounded-xl shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] border-8 border-[#5c4033] relative overflow-hidden">
       {/* Background Texture */}
       <div
-        className="absolute inset-0 opacity-10 pointer-events-none"
+        className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage:
             'url("https://www.transparenttextures.com/patterns/aged-paper.png")',
@@ -55,33 +55,35 @@ export const Board: React.FC<BoardProps> = ({ squares, currentSquare }) => {
               let icon = null;
 
               if (square.type === "START") {
-                bgColor = "bg-green-300";
-                icon = <Star className="w-6 h-6 text-green-800" />;
+                bgColor = "bg-[#8f9779]";
+                icon = <Star className="w-6 h-6 text-[#2f3325]" />;
               } else if (square.type === "FINISH") {
-                bgColor = "bg-yellow-400";
-                icon = <Star className="w-6 h-6 text-yellow-800" />;
+                bgColor = "bg-[#d4af37]";
+                icon = <Star className="w-6 h-6 text-[#5c4033]" />;
               } else if (square.type === "GATE") {
-                bgColor = "bg-blue-300";
-                icon = <ShieldAlert className="w-6 h-6 text-blue-800" />;
+                bgColor = "bg-[#4682b4]";
+                icon = <ShieldAlert className="w-6 h-6 text-[#1a364d]" />;
               } else if (square.type === "SNAKE") {
-                bgColor = "bg-red-200";
-                icon = <ArrowDownRight className="w-6 h-6 text-red-600" />;
+                bgColor = "bg-[#8b0000]";
+                icon = <ArrowDownRight className="w-6 h-6 text-[#ffb6c1]" />;
               } else if (square.type === "LADDER") {
-                bgColor = "bg-emerald-200";
-                icon = <ArrowUpRight className="w-6 h-6 text-emerald-600" />;
+                bgColor = "bg-[#556b2f]";
+                icon = <ArrowUpRight className="w-6 h-6 text-[#d4d0a5]" />;
               }
 
               return (
                 <div
                   key={square.id}
-                  className={`relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg border-2 border-[#8c7355] flex flex-col items-center justify-center shadow-md transition-all ${bgColor}`}
+                  className={`relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg border-2 border-[#5c4033] flex flex-col items-center justify-center shadow-md transition-all ${bgColor}`}
                 >
-                  <span className="absolute top-0.5 left-0.5 text-[10px] font-bold text-gray-700 opacity-50">
+                  <span className="absolute top-0.5 left-0.5 text-[10px] font-bold text-[#3e2723] opacity-70 font-serif">
                     {square.id}
                   </span>
                   {icon && <div className="scale-75">{icon}</div>}
                   {square.label && square.type !== "NORMAL" && (
-                    <span className="text-[6px] sm:text-[8px] text-center leading-tight px-0.5 font-semibold text-gray-800 mt-0.5 line-clamp-2">
+                    <span
+                      className={`text-[6px] sm:text-[8px] text-center leading-tight px-0.5 font-bold mt-0.5 line-clamp-2 font-serif ${square.type === "SNAKE" || square.type === "LADDER" || square.type === "GATE" ? "text-white" : "text-[#3e2723]"}`}
+                    >
                       {square.label}
                     </span>
                   )}

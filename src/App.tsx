@@ -156,21 +156,25 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen bg-[#f5f2ed] font-sans text-gray-900 flex flex-col items-center py-8 px-4 select-none"
+      className="min-h-screen bg-[#2c241b] font-sans text-gray-100 flex flex-col items-center py-8 px-4 select-none relative"
+      style={{
+        backgroundImage:
+          'url("https://www.transparenttextures.com/patterns/dark-leather.png")',
+      }}
       onCopy={(e) => e.preventDefault()}
       onPaste={(e) => e.preventDefault()}
     >
       {/* Header */}
-      <header className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+      <header className="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between mb-8 gap-4 bg-[#1a1410] p-4 rounded-2xl border-2 border-[#5c4033] shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Crown className="w-8 h-8 text-yellow-400" />
+          <div className="w-12 h-12 bg-[#8b0000] rounded-xl flex items-center justify-center shadow-lg border-2 border-[#d4af37]">
+            <Crown className="w-8 h-8 text-[#d4af37]" />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-gray-900 font-serif">
+            <h1 className="text-3xl font-black tracking-tight text-[#e8dcc7] font-serif">
               David's Journey
             </h1>
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest">
+            <p className="text-sm font-semibold text-[#a3b1c6] uppercase tracking-widest">
               The Epic Board Game
             </p>
           </div>
@@ -178,15 +182,15 @@ export default function App() {
 
         <div className="flex items-center gap-4">
           <div
-            className={`px-4 py-2 rounded-full font-bold text-sm shadow-sm border-2 ${epochInfo.bgClass} border-gray-200`}
+            className={`px-4 py-2 rounded-full font-bold text-sm shadow-sm border-2 ${epochInfo.bgClass} border-[#5c4033] text-[#3e2723]`}
           >
             Epoch: {epochInfo.name}
           </div>
           <button
             onClick={resetGame}
-            className="p-2 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
+            className="p-2 bg-[#e8dcc7] rounded-full shadow-sm border-2 border-[#5c4033] hover:bg-[#d4d0a5] transition-colors"
           >
-            <RefreshCw className="w-5 h-5 text-gray-600" />
+            <RefreshCw className="w-5 h-5 text-[#3e2723]" />
           </button>
         </div>
       </header>
@@ -214,8 +218,10 @@ export default function App() {
 
         {/* Bottom: Controls & Stats */}
         <div className="w-full flex flex-col md:flex-row gap-8 items-center md:items-stretch justify-center">
-          <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 w-full md:w-1/3 flex flex-col items-center">
-            <h2 className="text-xl font-bold mb-6 text-gray-800">Your Turn</h2>
+          <div className="bg-[#e8dcc7] p-6 rounded-2xl shadow-xl border-4 border-[#5c4033] w-full md:w-1/3 flex flex-col items-center">
+            <h2 className="text-xl font-bold mb-6 text-[#3e2723] font-serif">
+              Your Turn
+            </h2>
             <Dice
               onRoll={handleRoll}
               disabled={isRolling || isModalOpen || gameOver}
@@ -227,22 +233,22 @@ export default function App() {
           </div>
 
           {/* Current Square Info */}
-          <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 w-full md:w-1/3">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+          <div className="bg-[#e8dcc7] p-6 rounded-2xl shadow-xl border-4 border-[#5c4033] w-full md:w-1/3">
+            <h3 className="text-sm font-bold text-[#8b5a2b] uppercase tracking-wider mb-2 font-serif">
               Current Location
             </h3>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+              <div className="w-10 h-10 rounded-full bg-[#8b0000] flex items-center justify-center text-[#d4af37] font-bold border-2 border-[#d4af37]">
                 {currentSquare}
               </div>
-              <p className="font-semibold text-lg text-gray-800">
+              <p className="font-semibold text-lg text-[#3e2723] font-serif">
                 {GAME_BOARD.find((s) => s.id === currentSquare)?.label ||
                   `Square ${currentSquare}`}
               </p>
             </div>
             {GAME_BOARD.find((s) => s.id === currentSquare)
               ?.actionDescription && (
-              <p className="mt-4 text-sm text-gray-600 italic border-l-4 border-indigo-200 pl-3">
+              <p className="mt-4 text-sm text-[#5c4033] italic border-l-4 border-[#8b5a2b] pl-3 font-serif">
                 "
                 {
                   GAME_BOARD.find((s) => s.id === currentSquare)
@@ -270,41 +276,41 @@ export default function App() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white p-10 rounded-3xl shadow-2xl max-w-lg w-full text-center flex flex-col items-center"
+              className="bg-[#e8dcc7] p-10 rounded-3xl shadow-2xl max-w-lg w-full text-center flex flex-col items-center border-4 border-[#5c4033]"
             >
-              <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mb-6">
-                <Trophy className="w-12 h-12 text-yellow-500" />
+              <div className="w-24 h-24 bg-[#d4af37] rounded-full flex items-center justify-center mb-6 border-4 border-[#8b0000]">
+                <Trophy className="w-12 h-12 text-[#8b0000]" />
               </div>
-              <h2 className="text-4xl font-black text-gray-900 mb-4 font-serif">
+              <h2 className="text-4xl font-black text-[#3e2723] mb-4 font-serif">
                 A Man After God's Heart
               </h2>
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-lg text-[#5c4033] mb-8 font-serif">
                 You have completed David's journey! Through faith, mercy, and
                 courage, you navigated the trials and triumphs of his life.
               </p>
 
               <div className="flex gap-4 mb-8 w-full justify-center">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-[#4682b4] font-serif">
                     {stats.faith}
                   </div>
-                  <div className="text-xs uppercase font-bold text-gray-500">
+                  <div className="text-xs uppercase font-bold text-[#8b5a2b] font-serif">
                     Faith
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-pink-600">
+                  <div className="text-2xl font-bold text-[#8b0000] font-serif">
                     {stats.mercy}
                   </div>
-                  <div className="text-xs uppercase font-bold text-gray-500">
+                  <div className="text-xs uppercase font-bold text-[#8b5a2b] font-serif">
                     Mercy
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-600">
+                  <div className="text-2xl font-bold text-[#d4af37] font-serif">
                     {stats.courage}
                   </div>
-                  <div className="text-xs uppercase font-bold text-gray-500">
+                  <div className="text-xs uppercase font-bold text-[#8b5a2b] font-serif">
                     Courage
                   </div>
                 </div>
@@ -312,7 +318,7 @@ export default function App() {
 
               <button
                 onClick={resetGame}
-                className="px-8 py-4 bg-indigo-600 text-white rounded-full font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-xl w-full"
+                className="px-8 py-4 bg-[#8b0000] text-[#e8dcc7] rounded-full font-bold uppercase tracking-widest hover:bg-[#5c4033] transition-colors shadow-xl w-full border-2 border-[#d4af37] font-serif"
               >
                 Play Again
               </button>
