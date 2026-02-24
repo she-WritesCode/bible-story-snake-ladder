@@ -1,42 +1,82 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Board } from "./components/Board";
 import { Dice } from "./components/Dice";
 import { CardModal } from "./components/CardModal";
 import { StatsPanel } from "./components/StatsPanel";
+import { CharacterSelection } from "./components/CharacterSelection";
 import {
-  GAME_BOARD,
-  CARDS,
-  Card,
+  generateBoard,
   Square,
   EpochType,
-  getEpochForSquare,
-  EPOCHS,
+  Card,
+  Story,
 } from "./gameData";
+import { STORIES } from "./data/stories";
+
+const initialStory = STORIES.DAVID;
+const GAME_BOARD = generateBoard(initialStory);
+const CARDS = initialStory.cards;
+const EPOCHS = initialStory.epochs.reduce((acc, e) => ({ ...acc, [e.id]: e }), {});
+
+const getEpochForSquare = (id: number) => {
+  const square = GAME_BOARD.find((s) => s.id === id);
+  return square?.epoch || initialStory.epochs[0].id;
+};
+import { CHARACTERS } from "./data/characters";
 import { motion, AnimatePresence } from "motion/react";
-import { Crown, Trophy, RefreshCw } from "lucide-react";
+import { Crown, RefreshCw } from "lucide-react";
 
 export default function App() {
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [currentSquare, setCurrentSquare] = useState<number>(1);
-  const [stats, setStats] = useState({ faith: 10, mercy: 10, courage: 10 });
+  const [stats, setStats] = useState({ faith: 10, mercy: 10, courage: 10, favored: 0, spirituality: 0 });
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [gameOver, setGameOver] = useState(false);
 
-  // Epoch State
-  const epochsList: EpochType[] = Object.keys(EPOCHS) as EpochType[];
-  const currentEpoch = getEpochForSquare(currentSquare);
-  const [focusedEpochIndex, setFocusedEpochIndex] = useState(epochsList.indexOf(currentEpoch));
+  // Load Active Story
+  const activeStory = useMemo(() => {
+    if (!selectedCharacterId) return STORIES.DAVID;
+    return STORIES[selectedCharacterId] || STORIES.DAVID;
+  }, [selectedCharacterId]);
 
-  // Auto-focus when David moves
+  const activeBoard = useMemo(() => generateBoard(activeStory), [activeStory]);
+  const activeCards = activeStory.cards;
+  const epochsList = useMemo(() => activeStory.epochs.map(e => e.id), [activeStory]);
+  const currentEpochId = useMemo(() => {
+    const square = activeBoard.find(s => s.id === currentSquare);
+    return square?.epoch || epochsList[0];
+  }, [currentSquare, activeBoard, epochsList]);
+
+  const [focusedEpochIndex, setFocusedEpochIndex] = useState(0);
+
+  // Sync focused epoch with current player position
   useEffect(() => {
-    setFocusedEpochIndex(epochsList.indexOf(currentEpoch));
-  }, [currentSquare]);
+    const epochIndex = epochsList.indexOf(currentEpochId);
+    if (epochIndex !== -1) {
+      setFocusedEpochIndex(epochIndex);
+    }
+  }, [currentEpochId, epochsList]);
+
+  // Handle Character Selection
+  const handleCharacterSelect = (characterId: string) => {
+    const character = CHARACTERS[characterId];
+    setSelectedCharacterId(characterId);
+    setStats({
+      faith: character.startingStats.faith,
+      mercy: 10, // Default mercy
+      courage: character.startingStats.courage,
+      favored: character.startingStats.favored || 0,
+      spirituality: character.startingStats.spirituality || 0,
+    });
+    setFocusedEpochIndex(0);
+  };
 
   const showMessage = (msg: string) => {
     setMessage(msg);
-    setTimeout(() => setMessage(null), 4000);
+    setTimeout(() => setMessage(null), 3000);
   };
 
   const handleRoll = (value: number) => {
@@ -52,7 +92,7 @@ export default function App() {
   };
 
   const checkSquare = (squareId: number) => {
-    const square = GAME_BOARD.find((s) => s.id === squareId);
+    const square = activeBoard.find((s) => s.id === squareId);
     if (!square) return;
 
     if (square.type === "FINISH") {
@@ -60,26 +100,23 @@ export default function App() {
       return;
     }
 
-    if (square.type === "GATE") {
-      const wisdomCards = CARDS.filter((c) => c.type === "WISDOM");
-      const randomCard = wisdomCards[Math.floor(Math.random() * wisdomCards.length)];
-      setActiveCard(randomCard);
-      setIsModalOpen(true);
-    } else if (square.type === "SNAKE") {
-      const temptationCards = CARDS.filter((c) => c.type === "TEMPTATION");
-      const randomCard = temptationCards[Math.floor(Math.random() * temptationCards.length)];
-      setActiveCard(randomCard);
-      setIsModalOpen(true);
-    } else if (square.type === "LADDER") {
-      const providenceCards = CARDS.filter((c) => c.type === "PROVIDENCE");
-      const randomCard = providenceCards[Math.floor(Math.random() * providenceCards.length)];
-      setActiveCard(randomCard);
-      setIsModalOpen(true);
+    if (["GATE", "SNAKE", "LADDER"].includes(square.type)) {
+      let cardType: "WISDOM" | "TEMPTATION" | "PROVIDENCE" = "WISDOM";
+      if (square.type === "SNAKE") cardType = "TEMPTATION";
+      if (square.type === "LADDER") cardType = "PROVIDENCE";
 
-      if (square.target) {
+      const filteredCards = activeCards.filter((c) => c.type === cardType);
+      const randomCard = filteredCards[Math.floor(Math.random() * filteredCards.length)];
+      if (randomCard) {
+        setActiveCard(randomCard);
+        setIsModalOpen(true);
+      }
+
+      // If it's a fixed ladder with a target
+      if (square.type === "LADDER" && square.target) {
         setTimeout(() => {
           setCurrentSquare(square.target!);
-          showMessage(square.actionDescription || "A divine path opens before thee!");
+          showMessage(square.actionDescription || "You found a ladder!");
         }, 3000);
       }
     }
@@ -88,79 +125,94 @@ export default function App() {
   const handleCardAnswer = (correct: boolean) => {
     if (!activeCard) return;
 
-    if (correct) {
-      if (activeCard.type === "WISDOM") {
-        showMessage("Thy wisdom shines! Advance with faith.");
+    if (activeCard.type === "WISDOM") {
+      if (correct) {
+        showMessage("Correct! You may proceed.");
         setStats((prev) => ({ ...prev, faith: prev.faith + 5 }));
-      } else if (activeCard.type === "TEMPTATION") {
-        showMessage("Temptation overcome! Thy spirit grows strong.");
+      } else {
+        showMessage("Incorrect. Stay here and try again next turn.");
+        setStats((prev) => ({ ...prev, faith: Math.max(0, prev.faith - 2) }));
+        const square = activeBoard.find((s) => s.id === currentSquare);
+        if (square?.type === "GATE") {
+          setTimeout(() => setCurrentSquare(Math.max(1, currentSquare - 1)), 2000);
+        }
+      }
+    } else if (activeCard.type === "TEMPTATION") {
+      if (correct) {
+        showMessage("You overcame the temptation!");
         setStats((prev) => ({ ...prev, courage: prev.courage + 5 }));
         if (activeCard.successEffect?.move) {
           setTimeout(() => setCurrentSquare(Math.min(100, currentSquare + activeCard.successEffect!.move!)), 2000);
         }
-      }
-    } else {
-      if (activeCard.type === "WISDOM") {
-        showMessage("The scroll remains sealed. Reflect on thy path.");
-        setStats((prev) => ({ ...prev, faith: Math.max(0, prev.faith - 2) }));
-        if (currentSquare % 10 === 0) { // If at a gate
-          setTimeout(() => setCurrentSquare(Math.max(1, currentSquare - 1)), 2000);
-        }
-      } else if (activeCard.type === "TEMPTATION") {
-        showMessage("The trap has sprung! Thy courage falters.");
+      } else {
+        showMessage("You fell to the temptation.");
         setStats((prev) => ({ ...prev, courage: Math.max(0, prev.courage - 5) }));
         if (activeCard.failureEffect?.move) {
           setTimeout(() => setCurrentSquare(Math.max(1, currentSquare + activeCard.failureEffect!.move!)), 2000);
         }
       }
-    }
-
-    if (activeCard.type === "PROVIDENCE") {
-      showMessage("Divine favor is upon thee!");
+    } else if (activeCard.type === "PROVIDENCE") {
+      showMessage("A blessing from the Lord!");
       setStats((prev) => ({ ...prev, mercy: prev.mercy + 5 }));
       if (activeCard.effect?.move) {
         setTimeout(() => setCurrentSquare(Math.min(100, currentSquare + activeCard.effect!.move!)), 2000);
       }
     }
-
     setIsModalOpen(false);
     setActiveCard(null);
   };
 
   const resetGame = () => {
     setCurrentSquare(1);
-    setStats({ faith: 10, mercy: 10, courage: 10 });
+    const character = selectedCharacterId ? CHARACTERS[selectedCharacterId] : CHARACTERS.DAVID;
+    setStats({
+      faith: character.startingStats.faith,
+      mercy: 10,
+      courage: character.startingStats.courage,
+      favored: character.startingStats.favored || 0,
+      spirituality: character.startingStats.spirituality || 0,
+    });
     setGameOver(false);
     setMessage(null);
     setFocusedEpochIndex(0);
   };
 
-  const focusedEpoch = epochsList[focusedEpochIndex];
+  const returnToMenu = () => {
+    setSelectedCharacterId(null);
+    resetGame();
+  };
+
+  if (!selectedCharacterId) {
+    return <CharacterSelection onSelect={handleCharacterSelect} />;
+  }
+
+  const focusedEpoch = activeStory.epochs[focusedEpochIndex];
 
   return (
     <div className="h-screen overflow-hidden flex flex-col relative bg-medieval-stone shadow-inner">
-      {/* Scroll Header - Fixed height */}
       <header className="w-full flex justify-center py-4 px-4 shrink-0 z-10">
         <div className="w-full max-w-4xl medieval-scroll p-4 text-center border-y-2 border-medieval-gold/30 shadow-xl bg-medieval-parchment/90 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-4">
             <div className="text-left">
               <h1 className="text-xl md:text-3xl font-display font-black text-medieval-blood tracking-widest uppercase">
-                David's Journey
+                {activeStory.name}
               </h1>
               <p className="text-medieval-stone font-medieval text-xs italic">
-                {EPOCHS[focusedEpoch].name}
+                {focusedEpoch?.name}
               </p>
             </div>
 
             <div className="flex gap-4 items-center">
               <div className="hidden md:flex flex-col items-center px-4 py-1 bg-medieval-stone/5 border border-medieval-stone/10 rounded-sm">
-                <span className="text-[10px] font-black text-medieval-stone uppercase tracking-tighter">David's Epoch</span>
-                <span className="font-serif text-medieval-ink font-bold">{EPOCHS[currentEpoch].name}</span>
+                <span className="text-[10px] font-black text-medieval-stone uppercase tracking-tighter">Current Epoch</span>
+                <span className="font-serif text-medieval-ink font-bold">
+                  {activeStory.epochs.find(e => e.id === currentEpochId)?.name}
+                </span>
               </div>
               <button
-                onClick={resetGame}
+                onClick={returnToMenu}
                 className="p-2 bg-medieval-stone/10 border border-medieval-stone/20 rounded-full hover:bg-medieval-blood hover:text-white transition-colors"
-                title="Restart Chronicle"
+                title="Change Hero"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -169,15 +221,15 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area - Expands */}
       <main className="grow relative flex flex-col items-center justify-start p-4 md:p-8 overflow-hidden">
         <div className="w-full max-w-7xl h-full flex flex-col items-center gap-4 relative">
           <Board
-            squares={GAME_BOARD}
+            squares={activeBoard}
             currentSquare={currentSquare}
             focusedEpochIndex={focusedEpochIndex}
             onPan={(direction) => setFocusedEpochIndex(prev => Math.max(0, Math.min(epochsList.length - 1, prev + direction)))}
-            maxUnlockedEpochIndex={epochsList.indexOf(currentEpoch)}
+            maxUnlockedEpochIndex={epochsList.indexOf(currentEpochId)}
+            characterId={selectedCharacterId}
           />
 
           <AnimatePresence>
@@ -195,7 +247,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* Fixed Bottom Bar */}
       <footer className="w-full h-24 md:h-28 bg-medieval-stone border-t-4 border-medieval-gold shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50 p-2 md:p-4 shrink-0">
         <div className="max-w-6xl mx-auto h-full flex items-center justify-between gap-4">
           <div className="w-1/4 hidden md:block">
@@ -222,9 +273,9 @@ export default function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAnswer={handleCardAnswer}
+        characterId={selectedCharacterId}
       />
 
-      {/* Victory Scroll Modal */}
       <AnimatePresence>
         {gameOver && (
           <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4">
@@ -240,26 +291,19 @@ export default function App() {
               </div>
               <h2 className="text-5xl md:text-7xl font-display font-black text-medieval-blood mb-4 tracking-widest uppercase">Victory</h2>
               <p className="text-xl md:text-3xl font-serif text-medieval-ink mb-12 italic">
-                "Thou hast walked with the Lord through every trial. A crown of life awaits thee!"
+                {activeStory.characterId === "ESTHER"
+                  ? '"Thou hast saved thy people through courage and favor!"'
+                  : '"Thou hast walked with the Lord through every trial. A crown of life awaits thee!"'}
               </p>
 
               <div className="grid grid-cols-3 gap-4 md:gap-8 mb-12">
-                <div className="flex flex-col p-2 md:p-4 bg-medieval-ink/5 rounded-sm border border-medieval-stone/10 font-serif">
-                  <span className="text-[10px] uppercase font-display text-medieval-stone tracking-widest mb-1">Faith</span>
-                  <span className="text-2xl md:text-4xl font-black text-medieval-blood">{stats.faith}</span>
-                </div>
-                <div className="flex flex-col p-2 md:p-4 bg-medieval-ink/5 rounded-sm border border-medieval-stone/10 font-serif">
-                  <span className="text-[10px] uppercase font-display text-medieval-stone tracking-widest mb-1">Mercy</span>
-                  <span className="text-2xl md:text-4xl font-black text-medieval-blood">{stats.mercy}</span>
-                </div>
-                <div className="flex flex-col p-2 md:p-4 bg-medieval-ink/5 rounded-sm border border-medieval-stone/10 font-serif">
-                  <span className="text-[10px] uppercase font-display text-medieval-stone tracking-widest mb-1">Courage</span>
-                  <span className="text-2xl md:text-4xl font-black text-medieval-blood">{stats.courage}</span>
-                </div>
+                <StatResult label="Faith" value={stats.faith} />
+                <StatResult label="Mercy" value={stats.mercy} />
+                <StatResult label="Courage" value={stats.courage} />
               </div>
 
-              <button onClick={resetGame} className="medieval-button w-full py-5 text-xl">
-                Begin Thy Reign
+              <button onClick={returnToMenu} className="medieval-button w-full py-5 text-xl">
+                Begin Another Chronicle
               </button>
             </motion.div>
           </div>
@@ -268,3 +312,10 @@ export default function App() {
     </div>
   );
 }
+
+const StatResult: React.FC<{ label: string; value: number }> = ({ label, value }) => (
+  <div className="flex flex-col p-2 md:p-4 bg-medieval-ink/5 rounded-sm border border-medieval-stone/10 font-serif">
+    <span className="text-[10px] uppercase font-display text-medieval-stone tracking-widest mb-1">{label}</span>
+    <span className="text-2xl md:text-4xl font-black text-medieval-blood">{value}</span>
+  </div>
+);

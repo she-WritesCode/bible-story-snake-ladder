@@ -8,6 +8,7 @@ interface CardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAnswer: (correct: boolean) => void;
+  characterId: string;
 }
 
 export const CardModal: React.FC<CardModalProps> = ({
@@ -15,6 +16,7 @@ export const CardModal: React.FC<CardModalProps> = ({
   isOpen,
   onClose,
   onAnswer,
+  characterId,
 }) => {
   const [selectedOption, setSelectedOption] = React.useState<string | null>(
     null,
@@ -141,7 +143,7 @@ export const CardModal: React.FC<CardModalProps> = ({
 
             {/* Visual Seal Overlay */}
             <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-medieval-blood rounded-full border-4 border-medieval-gold shadow-2xl flex items-center justify-center rotate-12 pointer-events-none">
-              <span className="text-medieval-gold font-display text-2xl font-black">DJ</span>
+              <span className="text-medieval-gold font-display text-2xl font-black">{characterId.charAt(0)}</span>
             </div>
           </motion.div>
         </div>

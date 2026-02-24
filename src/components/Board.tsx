@@ -15,6 +15,7 @@ interface BoardProps {
   focusedEpochIndex: number;
   onPan: (direction: number) => void;
   maxUnlockedEpochIndex: number;
+  characterId: string;
 }
 
 export const Board: React.FC<BoardProps> = ({
@@ -22,7 +23,8 @@ export const Board: React.FC<BoardProps> = ({
   currentSquare,
   focusedEpochIndex,
   onPan,
-  maxUnlockedEpochIndex
+  maxUnlockedEpochIndex,
+  characterId
 }) => {
   const epochsList: EpochType[] = Object.keys(EPOCHS) as EpochType[];
   const focusedEpoch = epochsList[focusedEpochIndex];
@@ -141,9 +143,13 @@ export const Board: React.FC<BoardProps> = ({
             </linearGradient>
             <linearGradient id="snakeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1a4d1a" />
-              <stop offset="50%" stopColor="#2e7d32" />
+              <stop offset="30%" stopColor="#32cd32" />
+              <stop offset="70%" stopColor="#2e7d32" />
               <stop offset="100%" stopColor="#0a2d0a" />
             </linearGradient>
+            <pattern id="scalesPattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <path d="M 5 0 L 10 5 L 5 10 L 0 5 Z" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
+            </pattern>
             <filter id="shadow">
               <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.6" />
             </filter>
@@ -191,7 +197,8 @@ export const Board: React.FC<BoardProps> = ({
                 </g>
               );
             } else {
-              // Snake - Premium Curvy Path
+              // Snake - Realistic Curvy Path
+              const angle = Math.atan2(dy, dx);
               const cp1x = conn.from.x + dx * 0.2 - dy * 0.4;
               const cp1y = conn.from.y + dy * 0.2 + dx * 0.4;
               const cp2x = conn.from.x + dx * 0.8 + dy * 0.4;
@@ -200,25 +207,57 @@ export const Board: React.FC<BoardProps> = ({
 
               return (
                 <g key={conn.id} filter="url(#shadow)">
+                  {/* Main Body with Shading */}
                   <path
                     d={path}
                     fill="none"
                     stroke="url(#snakeGrad)"
-                    strokeWidth={isMobile ? "10" : "16"}
+                    strokeWidth={isMobile ? "12" : "18"}
                     strokeLinecap="round"
                   />
-                  {/* Scales/Glistening Highlights */}
+                  {/* Scales Pattern Overlay */}
                   <path
                     d={path}
                     fill="none"
-                    stroke="rgba(255,255,255,0.2)"
-                    strokeWidth={isMobile ? "3" : "5"}
-                    strokeDasharray="1 8"
+                    stroke="url(#scalesPattern)"
+                    strokeWidth={isMobile ? "10" : "14"}
                     strokeLinecap="round"
                   />
-                  {/* Snake Eyes at start point */}
-                  <circle cx={conn.from.x - 2} cy={conn.from.y - 2} r="1.5" fill="#FFD700" />
-                  <circle cx={conn.from.x + 2} cy={conn.from.y + 2} r="1.5" fill="#FFD700" />
+                  {/* Glistening Highlight (Tapered feel) */}
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.15)"
+                    strokeWidth={isMobile ? "4" : "6"}
+                    strokeDasharray="1 12"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Anatomical Head (Diamond Shape) */}
+                  <g transform={`translate(${conn.from.x}, ${conn.from.y}) rotate(${angle * 180 / Math.PI})`}>
+                    {/* Flickering Tongue */}
+                    <motion.path
+                      d="M 5 0 L 12 -2 M 5 0 L 12 2"
+                      stroke="#FF0000"
+                      strokeWidth="1.5"
+                      fill="none"
+                      animate={{ scaleX: [1, 1.3, 1], x: [0, 2, 0] }}
+                      transition={{ repeat: Infinity, duration: 0.8 }}
+                    />
+                    {/* Head Body */}
+                    <path
+                      d="M -8 -6 L 8 0 L -8 6 L -12 0 Z"
+                      fill="#1a4d1a"
+                      stroke="#0a2d0a"
+                      strokeWidth="1"
+                    />
+                    {/* Glowing Eyes */}
+                    <circle cx="-1" cy="-2.5" r="1.5" fill="#FFD700" className="animate-pulse" />
+                    <circle cx="-1" cy="2.5" r="1.5" fill="#FFD700" className="animate-pulse" />
+                  </g>
+
+                  {/* Tapered Tail Highlight */}
+                  <circle cx={conn.to.x} cy={conn.to.y} r={isMobile ? "2" : "3"} fill="#0a2d0a" />
                 </g>
               );
             }
@@ -274,8 +313,8 @@ export const Board: React.FC<BoardProps> = ({
                           <div className="rounded-full border-4 border-medieval-gold shadow-[0_0_20px_rgba(212,175,55,0.6)] overflow-hidden bg-medieval-stone z-10"
                             style={{ width: SQUARE_SIZE * 0.8, height: SQUARE_SIZE * 0.8 }}>
                             <img
-                              src="/david_avatar.png"
-                              alt="David"
+                              src={`/${characterId.toLowerCase()}_avatar.png`}
+                              alt={characterId}
                               className="w-full h-full object-cover"
                             />
                           </div>
