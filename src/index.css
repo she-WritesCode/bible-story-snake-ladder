@@ -1,59 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=MedievalSharp&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Cinzel", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-display: "Cinzel Decorative", serif;
-  --font-medieval: "MedievalSharp", cursive;
-
-  --color-medieval-gold: #d4af37;
-  --color-medieval-blood: #8b0000;
-  --color-medieval-parchment: #e8dcc7;
-  --color-medieval-ink: #3e2723;
-  --color-medieval-stone: #5c4033;
-}
-
-@layer base {
-  body {
-    @apply bg-medieval-stone antialiased select-none;
-    background-image: url("/parchment.png");
-    background-size: cover;
-    background-attachment: fixed;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  .font-serif {
-    font-family: var(--font-serif);
-  }
-
-  .font-display {
-    font-family: var(--font-display);
-  }
-
-  .font-medieval {
-    font-family: var(--font-medieval);
-  }
-}
-
-@layer components {
-  .medieval-scroll {
-    @apply bg-medieval-parchment border-medieval-stone shadow-2xl relative overflow-hidden;
-    background-image: url("https://www.transparenttextures.com/patterns/aged-paper.png");
-  }
-
-  .medieval-button {
-    @apply px-8 py-3 bg-medieval-stone text-medieval-parchment font-display text-lg uppercase tracking-widest border-2 border-medieval-gold transition-all hover:bg-medieval-blood hover:shadow-[0_0_20px_rgba(139,0,0,0.4)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .hide-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
+  --font-serif:
+    "Cinzel", ui-serif, Georgia, Cambria, "Times New Roman", Times,
+    serif;
 }

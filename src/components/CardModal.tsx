@@ -1,14 +1,13 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "../gameData";
-import { X, Check, Scroll } from "lucide-react";
+import { X, Check } from "lucide-react";
 
 interface CardModalProps {
   card: Card | null;
   isOpen: boolean;
   onClose: () => void;
   onAnswer: (correct: boolean) => void;
-  characterId: string;
 }
 
 export const CardModal: React.FC<CardModalProps> = ({
@@ -16,7 +15,6 @@ export const CardModal: React.FC<CardModalProps> = ({
   isOpen,
   onClose,
   onAnswer,
-  characterId,
 }) => {
   const [selectedOption, setSelectedOption] = React.useState<string | null>(
     null,
@@ -48,46 +46,53 @@ export const CardModal: React.FC<CardModalProps> = ({
     onClose();
   };
 
-  let headerLabel = "The Prophet's Scroll";
-  let accentColor = "text-medieval-ink";
-  let decoration = <Scroll className="w-8 h-8 opacity-20 absolute top-4 right-4" />;
+  let bgColor = "bg-white";
+  let borderColor = "border-gray-200";
+  let headerColor = "text-gray-900";
 
-  if (card.type === "PROVIDENCE") {
-    headerLabel = "Divine Favor";
-    accentColor = "text-[#2f3325]";
+  if (card.type === "WISDOM") {
+    bgColor = "bg-[#e8dcc7]";
+    borderColor = "border-[#5c4033]";
+    headerColor = "text-[#3e2723]";
+  } else if (card.type === "PROVIDENCE") {
+    bgColor = "bg-[#d4d0a5]";
+    borderColor = "border-[#8f9779]";
+    headerColor = "text-[#2f3325]";
   } else if (card.type === "TEMPTATION") {
-    headerLabel = "The Tempter's Trap";
-    accentColor = "text-medieval-blood";
+    bgColor = "bg-[#c29b9b]";
+    borderColor = "border-[#8b0000]";
+    headerColor = "text-[#3e2723]";
   }
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, rotate: -3 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            exit={{ opacity: 0, scale: 0.8, rotate: 3 }}
-            className="relative w-full max-w-lg p-12 medieval-scroll rounded-sm shadow-[0_0_100px_rgba(0,0,0,0.5)] border-x-MedievalStone"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className={`relative w-full max-w-md p-8 rounded-2xl shadow-2xl border-4 ${bgColor} ${borderColor}`}
           >
-            {/* Scroll Handles (Visual Only) */}
-            <div className="absolute -left-4 top-0 bottom-0 w-8 bg-medieval-stone rounded-full shadow-lg border-2 border-medieval-gold"></div>
-            <div className="absolute -right-4 top-0 bottom-0 w-8 bg-medieval-stone rounded-full shadow-lg border-2 border-medieval-gold"></div>
-
-            <div className="text-center mb-8 relative">
-              {decoration}
-              <h2 className={`text-3xl font-display font-black uppercase tracking-[0.2em] ${accentColor} border-b-2 border-medieval-stone/20 pb-2 mb-2`}>
-                {headerLabel}
+            <div className="text-center mb-6">
+              <h2
+                className={`text-2xl font-bold uppercase tracking-widest ${headerColor} font-serif`}
+              >
+                {card.type === "WISDOM"
+                  ? "The Prophet's Scroll"
+                  : card.type === "PROVIDENCE"
+                    ? "Divine Favor"
+                    : "The Tempter's Trap"}
               </h2>
-              <h3 className="text-xl font-medieval text-medieval-stone italic">
+              <h3 className="text-xl font-semibold mt-2 text-[#3e2723] font-serif">
                 {card.title}
               </h3>
             </div>
 
-            <div className="mb-10 text-xl text-medieval-ink leading-[1.6] text-center font-medium font-serif italic hyphens-auto">
-              "{card.description}"
+            <div className="mb-8 text-lg text-[#5c4033] leading-relaxed text-center font-medium font-serif">
+              {card.description}
               {card.question && (
-                <div className="mt-6 font-black text-2xl text-medieval-stone not-italic font-display border-t border-medieval-stone/10 pt-4">
+                <div className="mt-4 font-bold text-[#3e2723]">
                   {card.question}
                 </div>
               )}
@@ -95,22 +100,28 @@ export const CardModal: React.FC<CardModalProps> = ({
 
             {(card.type === "WISDOM" || card.type === "TEMPTATION") &&
               card.options && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
                   {card.options.map((option, idx) => {
-                    let btnClass = "bg-medieval-parchment/60 border-2 border-medieval-stone/30 text-medieval-ink hover:bg-medieval-gold/20 hover:border-medieval-gold shadow-md";
+                    let btnClass =
+                      "bg-[#e8dcc7] border-2 border-[#5c4033] text-[#3e2723] hover:bg-[#d4d0a5]";
                     let icon = null;
 
                     if (selectedOption === option) {
                       if (isCorrect) {
-                        btnClass = "bg-[#8f9779]/40 border-2 border-[#2f3325] text-[#2f3325] shadow-inner font-black scale-[0.98]";
-                        icon = <Check className="w-6 h-6 text-[#2f3325]" />;
+                        btnClass =
+                          "bg-[#8f9779] border-[#2f3325] text-[#2f3325]";
+                        icon = <Check className="w-5 h-5 text-[#2f3325]" />;
                       } else {
-                        btnClass = "bg-medieval-blood/20 border-2 border-medieval-blood text-medieval-blood shadow-inner font-black scale-[0.98]";
-                        icon = <X className="w-6 h-6 text-medieval-blood" />;
+                        btnClass =
+                          "bg-[#c29b9b] border-[#8b0000] text-[#3e2723]";
+                        icon = <X className="w-5 h-5 text-[#8b0000]" />;
                       }
-                    } else if (selectedOption !== null && option === card.answer) {
-                      btnClass = "bg-[#d4d0a5]/40 border-2 border-[#8f9779] text-[#2f3325]";
-                      icon = <Check className="w-6 h-6 text-[#2f3325]" />;
+                    } else if (
+                      selectedOption !== null &&
+                      option === card.answer
+                    ) {
+                      btnClass = "bg-[#d4d0a5] border-[#8f9779] text-[#2f3325]";
+                      icon = <Check className="w-5 h-5 text-[#2f3325]" />;
                     }
 
                     return (
@@ -118,12 +129,10 @@ export const CardModal: React.FC<CardModalProps> = ({
                         key={idx}
                         onClick={() => handleOptionClick(option)}
                         disabled={selectedOption !== null}
-                        className={`flex items-center justify-between px-6 py-4 rounded-sm transition-all text-lg font-medieval ${btnClass}`}
+                        className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold font-serif ${btnClass}`}
                       >
-                        <span className="flex-1 text-center">{option}</span>
-                        <div className="w-6 h-6 flex items-center justify-center translate-x-2">
-                          {icon}
-                        </div>
+                        <span>{option}</span>
+                        {icon}
                       </button>
                     );
                   })}
@@ -131,20 +140,15 @@ export const CardModal: React.FC<CardModalProps> = ({
               )}
 
             {card.type !== "WISDOM" && card.type !== "TEMPTATION" && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-6">
                 <button
                   onClick={handleAcknowledge}
-                  className="medieval-button"
+                  className="px-8 py-3 bg-[#8b0000] text-[#e8dcc7] rounded-full font-bold uppercase tracking-wider hover:bg-[#5c4033] transition-colors shadow-lg border-2 border-[#d4af37] font-serif"
                 >
-                  Thy Will Be Done
+                  Continue
                 </button>
               </div>
             )}
-
-            {/* Visual Seal Overlay */}
-            <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-medieval-blood rounded-full border-4 border-medieval-gold shadow-2xl flex items-center justify-center rotate-12 pointer-events-none">
-              <span className="text-medieval-gold font-display text-2xl font-black">{characterId.charAt(0)}</span>
-            </div>
           </motion.div>
         </div>
       )}
