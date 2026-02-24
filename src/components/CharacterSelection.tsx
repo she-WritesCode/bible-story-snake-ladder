@@ -34,16 +34,6 @@ const CharacterCard: React.FC<{ character: Character; onSelect: () => void }> = 
   character,
   onSelect,
 }) => {
-  const getIcon = (id: string) => {
-    switch (id) {
-      case "DAVID": return <Crown className="w-8 h-8" />;
-      case "ESTHER": return <Heart className="w-8 h-8" />;
-      case "DANIEL": return <BookOpen className="w-8 h-8" />;
-      case "JOSEPH": return <Shield className="w-8 h-8" />;
-      default: return <Crown className="w-8 h-8" />;
-    }
-  };
-
   return (
     <motion.div
       whileHover={{ scale: 1.05, y: -10 }}
@@ -51,8 +41,12 @@ const CharacterCard: React.FC<{ character: Character; onSelect: () => void }> = 
       onClick={onSelect}
       className="medieval-scroll cursor-pointer group flex flex-col items-center p-6 border-2 border-medieval-gold/30 hover:border-medieval-gold transition-all duration-300"
     >
-      <div className="w-20 h-20 bg-medieval-stone rounded-full flex items-center justify-center border-4 border-medieval-gold mb-6 group-hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all">
-        <div className="text-medieval-gold">{getIcon(character.id)}</div>
+      <div className="w-24 h-24 bg-medieval-stone rounded-full overflow-hidden border-4 border-medieval-gold mb-6 group-hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all">
+        <img
+          src={`/${character.id.toLowerCase()}_avatar.png`}
+          alt={character.name}
+          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+        />
       </div>
 
       <h3 className="text-2xl font-display font-black text-medieval-blood mb-2 uppercase tracking-wider text-center">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Square, EPOCHS, EpochType } from "../gameData";
+import { Square, EpochType, EpochConfig } from "../gameData";
 import { motion } from "motion/react";
 import {
   Compass,
@@ -16,6 +16,7 @@ interface BoardProps {
   onPan: (direction: number) => void;
   maxUnlockedEpochIndex: number;
   characterId: string;
+  epochs: EpochConfig[];
 }
 
 export const Board: React.FC<BoardProps> = ({
@@ -24,10 +25,12 @@ export const Board: React.FC<BoardProps> = ({
   focusedEpochIndex,
   onPan,
   maxUnlockedEpochIndex,
-  characterId
+  characterId,
+  epochs
 }) => {
-  const epochsList: EpochType[] = Object.keys(EPOCHS) as EpochType[];
-  const focusedEpoch = epochsList[focusedEpochIndex];
+  const epochsList = useMemo(() => epochs.map(e => e.id), [epochs]);
+  const focusedEpochConfig = epochs[focusedEpochIndex];
+  const focusedEpoch = focusedEpochConfig?.id;
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -108,7 +111,7 @@ export const Board: React.FC<BoardProps> = ({
 
         <div className="text-center min-w-[200px]">
           <h2 className="text-2xl font-display font-black text-medieval-ink tracking-widest uppercase mb-1">
-            {EPOCHS[focusedEpoch].name}
+            {focusedEpochConfig?.name}
           </h2>
           <div className="text-[10px] font-medieval text-medieval-stone italic">
             Chronicle Chapter {focusedEpochIndex + 1}

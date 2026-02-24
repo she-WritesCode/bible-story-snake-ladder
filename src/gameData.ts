@@ -53,8 +53,6 @@ export interface Story {
   cards: Card[];
 }
 
-export const EPOCHS: Record<EpochType, { name: string; color: string; bgClass: string }> = {}; // Will be populated by active story
-
 export const generateBoard = (story: Story): Square[] => {
   const { epochs, fixedSquares } = story;
 

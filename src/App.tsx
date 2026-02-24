@@ -13,15 +13,6 @@ import {
 } from "./gameData";
 import { STORIES } from "./data/stories";
 
-const initialStory = STORIES.DAVID;
-const GAME_BOARD = generateBoard(initialStory);
-const CARDS = initialStory.cards;
-const EPOCHS = initialStory.epochs.reduce((acc, e) => ({ ...acc, [e.id]: e }), {});
-
-const getEpochForSquare = (id: number) => {
-  const square = GAME_BOARD.find((s) => s.id === id);
-  return square?.epoch || initialStory.epochs[0].id;
-};
 import { CHARACTERS } from "./data/characters";
 import { motion, AnimatePresence } from "motion/react";
 import { Crown, RefreshCw } from "lucide-react";
@@ -230,6 +221,7 @@ export default function App() {
             onPan={(direction) => setFocusedEpochIndex(prev => Math.max(0, Math.min(epochsList.length - 1, prev + direction)))}
             maxUnlockedEpochIndex={epochsList.indexOf(currentEpochId)}
             characterId={selectedCharacterId}
+            epochs={activeStory.epochs}
           />
 
           <AnimatePresence>
